@@ -15,7 +15,6 @@ def main():
     with open("dictionary.txt", "r") as f:
         common_words = f.read().splitlines()
 
-    random.seed(42)
 
     while True:
 
