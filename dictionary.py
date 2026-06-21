@@ -25,8 +25,7 @@ def get_common_words():
         if word_lower.endswith("ing"): continue
         if word_lower.endswith("er"): continue
         if word_lower.endswith("or"): continue
-        if word_lower.endswith("est"): continue
-        if word_lower.endswith("est"): continue
+
         if word_lower in stop_words: continue
         words.add(word_lower)
     return list(words)

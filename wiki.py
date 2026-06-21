@@ -76,7 +76,6 @@ def get_page_links_with_cache(page_name):
 def is_regular_page(page_name):
     return not _META_PAGE_PATTERN.search(page_name)
 
-# TODO: Gotta speed this up. It's OK if we don't get the shortest path, but we should get *a* path.
 def _find_short_path(start_path, end_path):
     """Quick and dirty method to find a short path between two Wikipedia pages. Hill climbs from the start and end pages towards each other, using cosine similarity of sentence embeddings to score links. Kinda like A*, but with cosine similarity instead of Euclidean distance?"""
 
