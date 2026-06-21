@@ -6,6 +6,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 import re
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning, module="wikipedia")
 
 
 _META_PAGE_PATTERN = re.compile(
