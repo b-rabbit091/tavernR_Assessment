@@ -5,6 +5,14 @@ import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+import re
+
+
+_META_PAGE_PATTERN = re.compile(
+    r'disambiguation|wikidata|short description|wikipedia:|cs1|'
+    r'^use |^articles |^pages |^all articles',
+    re.IGNORECASE
+)
 
 # Load spacy model once at module level
 nlp = spacy.load("en_core_web_sm")
@@ -63,12 +71,7 @@ def get_page_links_with_cache(page_name):
     return filtered
 
 def is_regular_page(page_name):
-    if "disambiguation" in page_name: return False
-    if "automatic" in page_name: return False
-    if "article" in page_name: return False
-    if "page" in page_name: return False
-    if "identifier" in page_name: return False
-    return True
+    return not _META_PAGE_PATTERN.search(page_name)
 
 # TODO: Gotta speed this up. It's OK if we don't get the shortest path, but we should get *a* path.
 def _find_short_path(start_path, end_path):
