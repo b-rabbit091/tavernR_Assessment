@@ -82,11 +82,9 @@ def _find_short_path(start_path, end_path):
     if end_leaf in links:
         return start_path + end_path
     
-    # TODO: Check whether links are actually symmetric.
     backlinks = get_page_links_with_cache(end_leaf)
-    if start_leaf in backlinks:
-        return start_path + end_path
-    
+
+
     intersection = list(set(links) & set(backlinks))
     if len(intersection) > 0:
         return start_path + [intersection[0]] + end_path
