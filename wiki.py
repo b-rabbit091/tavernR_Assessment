@@ -76,7 +76,7 @@ def _find_short_path(start_path, end_path):
         return None
 
     if start_leaf == end_leaf:
-        return start_path + end_path
+        return start_path + end_path[1:]
     
     links = get_page_links_with_cache(start_leaf)
     if end_leaf in links:
