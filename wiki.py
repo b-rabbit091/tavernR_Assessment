@@ -84,26 +84,30 @@ def _find_short_path(start_path, end_path):
     
     backlinks = get_page_links_with_cache(end_leaf)
 
-
     intersection = list(set(links) & set(backlinks))
     if len(intersection) > 0:
         return start_path + [intersection[0]] + end_path
     
     print(f"{start_path[-1]} ??? {end_path[0]}")
 
+    visited = set(start_path + end_path)
+
     # Recursively search inwards
     end_leaf_page = get_page(end_leaf)
     end_embedding = encode_text(end_leaf_page.summary)
     scored_links = [(link, cosine_similarity(encode_text(link), end_embedding)[0][0]) for link in links]
     scored_links.sort(key=lambda x: x[1], reverse=True)
-    next_page = scored_links[0][0]
+    next_page = next((link for link, _ in scored_links if link not in visited), None)
+    if next_page is None:
+        return None
 
     start_leaf_page = get_page(start_leaf)
     start_embedding = encode_text(start_leaf_page.summary)
     scored_categories = [(backlink, cosine_similarity(encode_text(backlink), start_embedding)[0][0]) for backlink in backlinks]
     scored_categories.sort(key=lambda x: x[1], reverse=True)
-    previous_page = scored_categories[0][0]
-
+    previous_page = next((link for link, _ in scored_categories if link not in visited), None)
+    if previous_page is None:
+        return None
     return _find_short_path(start_path + [next_page], [previous_page] + end_path)
 
 
