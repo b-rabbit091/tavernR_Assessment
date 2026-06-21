@@ -4,6 +4,7 @@ import sqlite3
 import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 # Load spacy model once at module level
 nlp = spacy.load("en_core_web_sm")
@@ -70,7 +71,6 @@ def is_regular_page(page_name):
     return True
 
 # TODO: Gotta speed this up. It's OK if we don't get the shortest path, but we should get *a* path.
-# TODO: Add a timeout to the search. 10 seconds?
 def _find_short_path(start_path, end_path):
     """Quick and dirty method to find a short path between two Wikipedia pages. Hill climbs from the start and end pages towards each other, using cosine similarity of sentence embeddings to score links. Kinda like A*, but with cosine similarity instead of Euclidean distance?"""
 
@@ -120,8 +120,13 @@ def _find_short_path(start_path, end_path):
 
     return _find_short_path(start_path + [next_page], [previous_page] + end_path)
 
-def find_short_path(start_page,  end_page):
+def find_short_path(start_page, end_page):
     start_path = [start_page.title]
     end_path = [end_page.title]
 
-    return _find_short_path(start_path, end_path)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_find_short_path, start_path, end_path)
+        try:
+            return future.result(timeout=10)
+        except FuturesTimeoutError:
+            return None
