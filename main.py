@@ -39,14 +39,20 @@ def main():
         print("Calculating Bacon paths...\n")
 
         computer_path = find_short_path(start_page, computer_page)
-        print("Computer's path:")
-        print(f"\n -> ".join(computer_path))
-        print(f"Length: {len(computer_path)}\n")
+        if computer_path:
+            print("Computer's path:")
+            print(f"\n -> ".join(computer_path))
+            print(f"Length: {len(computer_path)}\n")
+        else:
+            computer_path=[]
 
         user_path = find_short_path(start_page, user_page)
-        print("Your path:")
-        print(f"\n -> ".join(user_path))
-        print(f"Length: {len(user_path)}\n")
+        if user_path:
+            print("Your path:")
+            print(f"\n -> ".join(user_path))
+            print(f"Length: {len(user_path)}\n")
+        else:
+            user_path = []
 
         if len(computer_path) > len(user_path):
             print("I win!")
