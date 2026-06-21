@@ -107,7 +107,18 @@ def mock_wikipedia_library():
             raise wikipedia.exceptions.PageError(page_name)
         return mock_pages[page_name]
 
-    with patch('wikipedia.page') as mock_page:
+    def mock_get_links(page_name):
+        if page_name not in TEST_PAGES:
+            return []
+        page_data = TEST_PAGES[page_name]
+        all_links = page_data["links"] + page_data["categories"]
+        filtered = [link for link in all_links if wiki.is_regular_page(link)]
+        if page_name in filtered:
+            filtered.remove(page_name)
+        return filtered
+
+    with patch('wikipedia.page') as mock_page, \
+         patch('wiki.get_page_links_with_cache', side_effect=mock_get_links):
         mock_page.side_effect = side_effect
         yield mock_page
 
