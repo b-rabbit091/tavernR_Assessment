@@ -18,19 +18,21 @@ def encode_text(text):
     doc = nlp(text)
     return doc.vector.reshape(1, -1)
 
-# TODO: Returns the Python page too often.
 def get_page(page_name):
     """Get a specific Wikipedia page by name"""
     try:
         return wikipedia.page(page_name, auto_suggest=False, redirect=False)
-    except:
+    except wikipedia.exceptions.DisambiguationError as e:
+        return wikipedia.page(e.options[0], auto_suggest=False, redirect=False)
+    except wikipedia.exceptions.PageError:
         pass
+
     try:
         search_results = wikipedia.search(page_name)
         choice = search_results[0]
         page = wikipedia.page(choice, auto_suggest=False, redirect=False)
         return page
-    except:
+    except Exception:
         # Return a default page if not found
         return wikipedia.page("Python (programming language)")
 
