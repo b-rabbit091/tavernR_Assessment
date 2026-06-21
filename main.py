@@ -1,8 +1,5 @@
 from wiki import get_page, find_short_path
 import random
-import warnings
-import nltk
-import spacy
 
 def main():
     print("\n\n🥓 Welcome to WikiBacon! 🥓\n")

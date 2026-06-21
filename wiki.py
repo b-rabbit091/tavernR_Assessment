@@ -18,9 +18,10 @@ _META_PAGE_PATTERN = re.compile(
 nlp = spacy.load("en_core_web_sm")
 
 # create the database if it doesn't exist
-conn = sqlite3.connect("pages.db")
+conn = sqlite3.connect("pages.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS pages (name TEXT, links TEXT)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_pages_name ON pages (name)")
 conn.commit()
 
 def encode_texts_batch(texts):
@@ -52,8 +53,7 @@ def get_page(page_name):
         return wikipedia.page("Python (programming language)")
 
 def get_page_links_with_cache(page_name):
-    conn = sqlite3.connect("pages.db")
-    cursor = conn.cursor()
+
     cached_page = cursor.execute("SELECT * FROM pages WHERE name = ?", (page_name,)).fetchone()
 
     if not cached_page:
