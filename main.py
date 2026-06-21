@@ -27,7 +27,7 @@ def main():
         print(f"The computer's page is: {computer_page.title}\n")
         print(f"Summary: {computer_page.summary[:500]}...\n")
 
-        print("What would you like your page to be page?")
+        print("What would you like your page to be?")
         user_page_name = input()
         user_page = get_page(user_page_name)
         print(f"Your page is: {user_page.title}\n")
