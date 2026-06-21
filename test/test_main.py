@@ -36,7 +36,7 @@ def test_main_single_round(mock_wiki_functions, mock_input):
     
     main()
     
-    # Verify input was called twice
+    #  Verify input was called three times: start, user page, quit
     assert mock_input.call_count == 3
 
 def test_main_multiple_rounds(mock_wiki_functions, mock_input):
@@ -46,23 +46,15 @@ def test_main_multiple_rounds(mock_wiki_functions, mock_input):
     
     main()
     
-    # Should have 6 input calls: 
-    # enter
-    # page name, play again (yes), 
-    # page name, play again (yes), 
-    # page name, play again (no)
+    # Should have 7 input calls:
+    # 1 - start game
+    # page name, play again (yes) x2
+    # page name, play again (yes) x2
+    # page name, play again (no)  x2
     assert mock_input.call_count == 7
 
 def test_stop_q(mock_wiki_functions, mock_input):
-    """Test that main function handles different input types"""
-    # Test with different input types
-    test_inputs = ['q']
-    
-    for test_input in test_inputs:
-        mock_input.reset_mock()
-        mock_input.side_effect = ['','Forest', test_input, 'Utopia', 'n']
-        
-        # Should not raise any exceptions
-        main()
-        
-        assert mock_input.call_count == 3
+    """Test that entering q quits the game after one round"""
+    mock_input.side_effect = ['', 'Forest', 'q']
+    main()
+    assert mock_input.call_count == 3
