@@ -3,6 +3,7 @@ import json
 import sqlite3
 import spacy
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Load spacy model once at module level
 nlp = spacy.load("en_core_web_sm")
@@ -12,6 +13,11 @@ conn = sqlite3.connect("pages.db")
 cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS pages (name TEXT, links TEXT)")
 conn.commit()
+
+def encode_texts_batch(texts):
+    """Batch encode multiple texts in a single spacy pass for efficiency"""
+    docs = list(nlp.pipe(texts))
+    return np.array([doc.vector for doc in docs]).reshape(len(docs), -1)
 
 def encode_text(text):
     """Encode text using spacy's sentence vectors"""
@@ -66,50 +72,53 @@ def is_regular_page(page_name):
 # TODO: Gotta speed this up. It's OK if we don't get the shortest path, but we should get *a* path.
 # TODO: Add a timeout to the search. 10 seconds?
 def _find_short_path(start_path, end_path):
-    """Quick and dirty method to find a short path between two Wikipedia pages. Hill climbs from the start and end pages towards each other, using cosine similarity of  sentence embeddings to score links. Kinda like A*, but with cosine similarity instead of Euclidean distance?"""
+    """Quick and dirty method to find a short path between two Wikipedia pages. Hill climbs from the start and end pages towards each other, using cosine similarity of sentence embeddings to score links. Kinda like A*, but with cosine similarity instead of Euclidean distance?"""
 
     start_leaf = start_path[-1]
     end_leaf = end_path[0]
 
-    # Base cases: we've reached the end
     if len(start_path) + len(end_path) > 20:
         return None
 
     if start_leaf == end_leaf:
         return start_path + end_path[1:]
-    
+
     links = get_page_links_with_cache(start_leaf)
     if end_leaf in links:
         return start_path + end_path
-    
+
     backlinks = get_page_links_with_cache(end_leaf)
 
     intersection = list(set(links) & set(backlinks))
     if len(intersection) > 0:
         return start_path + [intersection[0]] + end_path
-    
     print(f"{start_path[-1]} ??? {end_path[0]}")
+
+    if not links or not backlinks:
+        return None
 
     visited = set(start_path + end_path)
 
-    # Recursively search inwards
     end_leaf_page = get_page(end_leaf)
     end_embedding = encode_text(end_leaf_page.summary)
-    scored_links = [(link, cosine_similarity(encode_text(link), end_embedding)[0][0]) for link in links]
-    scored_links.sort(key=lambda x: x[1], reverse=True)
+    link_vectors = encode_texts_batch(links)
+    scores = cosine_similarity(link_vectors, end_embedding).flatten()
+    scored_links = sorted(zip(links, scores), key=lambda x: x[1], reverse=True)
     next_page = next((link for link, _ in scored_links if link not in visited), None)
     if next_page is None:
         return None
 
+
     start_leaf_page = get_page(start_leaf)
     start_embedding = encode_text(start_leaf_page.summary)
-    scored_categories = [(backlink, cosine_similarity(encode_text(backlink), start_embedding)[0][0]) for backlink in backlinks]
-    scored_categories.sort(key=lambda x: x[1], reverse=True)
+    backlink_vectors = encode_texts_batch(backlinks)
+    scores = cosine_similarity(backlink_vectors, start_embedding).flatten()
+    scored_categories = sorted(zip(backlinks, scores), key=lambda x: x[1], reverse=True)
     previous_page = next((link for link, _ in scored_categories if link not in visited), None)
     if previous_page is None:
         return None
-    return _find_short_path(start_path + [next_page], [previous_page] + end_path)
 
+    return _find_short_path(start_path + [next_page], [previous_page] + end_path)
 
 def find_short_path(start_page,  end_page):
     start_path = [start_page.title]
